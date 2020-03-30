@@ -38,6 +38,7 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
     private static final long serialVersionUID = 1L;
     {
       add("m/d/yy");
+      add("m/d");
       add("mm/dd/yy");
       add("yy/m/d");
       add("yyyy/m/d");
@@ -188,16 +189,27 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
       }
       prefPos = currentPos;
       String value = lastContents.trim();
-      if(value.length()>0){
+      int length = value.length();
+      if(length>0){
         //日期格式处理
         if(null!=dateFormat){
-          Date date = HSSFDateUtil.getJavaDate(Double.valueOf(value));
-          value = new SimpleDateFormat(dateFormat).format(date);
+            Date date = null;
+            try {
+              date = HSSFDateUtil.getJavaDate(Double.valueOf(value));
+            } catch (Exception e) {
+              if(length==10) {
+                try {
+                  date = HSSFDateUtil.parseYYYYMMDDDate(value);
+                }catch (Exception ignore) {}
+              }
+            }
+            if(null!=date) {
+              value = new SimpleDateFormat(dateFormat).format(date);
+            }
         }else if(CELL_TYPE_NONE==nextCellType) {
           //尝试按数字处理
           try {
-            double v = Double.parseDouble(value);
-            value = DoubleFixUtil.fix(v);
+            value = DoubleFixUtil.fix(Double.parseDouble(value));
           }catch(Exception ignore) {}
         }
       }

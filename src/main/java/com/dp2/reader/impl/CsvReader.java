@@ -65,6 +65,14 @@ public class CsvReader extends AbstractReader implements Closeable{
     return l;
   }
 
+  private void endQuote(List<String> l,String s){
+    buffer.append(SPACE);
+    buffer.append(s);
+    l.add(buffer.toString());
+    buffer.setLength(0);
+    quoted = false;
+  }
+
   /**
    * 按照CSV格式规范将拆散的本来是一列的数据合并
    *
@@ -73,49 +81,41 @@ public class CsvReader extends AbstractReader implements Closeable{
    */
   private List<String> combine(List<String> segments){
     List<String> l = new ArrayList<String>();
-    for(String o:segments){
-      String t = o.replace(QUOTE+QUOTE,"");
+    for(String seg:segments){
+      String t = seg.replace(QUOTE+QUOTE,"");
       if(t.startsWith(QUOTE)){
         if(!quoted){
           quoted = true;
-          buffer.append(o);
+          buffer.append(seg);
           if(t.endsWith(QUOTE)){
             if(!t.equals(QUOTE)){
               l.add(buffer.toString());
-              buffer.delete(0,buffer.length());
+              buffer.setLength(0);
               quoted = false;
             }
           }
         }else{
           if(t.equals(QUOTE)){
-            buffer.append(SPACE);
-            buffer.append(o);
-            l.add(buffer.toString());
-            buffer.delete(0,buffer.length());
-            quoted = false;
+            endQuote(l,seg);
           }else{
             l.add(buffer.toString());
-            buffer.delete(0,buffer.length());
-            buffer.append(o);
+            buffer.setLength(0);
+            buffer.append(seg);
             quoted = true;
           }
         }
       }else if(t.endsWith(QUOTE)){
         if(quoted){
-          buffer.append(SPACE);
-          buffer.append(o);
-          l.add(buffer.toString());
-          buffer.delete(0,buffer.length());
-          quoted = false;
+          endQuote(l,seg);
         }else{
-          l.add(o);
+          l.add(seg);
         }
       }else{
         if(quoted){
           buffer.append(SPACE);
-          buffer.append(o);
+          buffer.append(seg);
         }else{
-          l.add(o);
+          l.add(seg);
         }
       }
     }
@@ -138,7 +138,7 @@ public class CsvReader extends AbstractReader implements Closeable{
    * @return 一行数据，如果没有下一行，返回null
    */
   public List<String> nextLine(){
-    buffer.delete(0,buffer.length());
+    buffer.setLength(0);
     quoted = false;
     String line = readLine();
     if(null==line){
@@ -184,7 +184,7 @@ public class CsvReader extends AbstractReader implements Closeable{
     reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), ReaderUtil.getCharset(file)));
     stop = false;
     quoted = false;
-    buffer.delete(0,buffer.length());
+    buffer.setLength(0);
   }
 
   @Override
