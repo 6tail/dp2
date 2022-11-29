@@ -11,11 +11,19 @@ import com.dp2.marker.Marker;
 public class Node extends AbstractNode{
 
   public Node(String markerName){
-    setMarker(new Marker(markerName,0,0));
+    this(markerName,null);
+  }
+
+  public Node(Marker marker){
+    this(marker,null);
   }
 
   public Node(String markerName,String value){
-    this(markerName);
+    this(new Marker(markerName,0,0),value);
+  }
+
+  public Node(Marker marker,String value){
+    setMarker(marker);
     setValue(value);
   }
 

@@ -14,6 +14,7 @@ import com.dp2.marker.RepeatedMarker;
 public abstract class AbstractNode implements INode{
   protected Marker marker;
   protected String value;
+  protected Integer height;
   protected List<INode> children;
   protected NodeType type = NodeType.text;
 
@@ -120,6 +121,14 @@ public abstract class AbstractNode implements INode{
 
   public void setChildren(List<INode> children){
     this.children = children;
+  }
+
+  public void setHeight(Integer height) {
+    this.height = height;
+  }
+
+  public Integer getHeight() {
+    return height;
   }
 
   public void addChild(INode child){

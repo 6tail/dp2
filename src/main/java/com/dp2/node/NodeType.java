@@ -10,5 +10,7 @@ public enum NodeType{
   /** 文本 */
   text,
   /** 数字 */
-  number
+  number,
+  /** 本地图片 */
+  local_image
 }

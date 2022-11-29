@@ -38,11 +38,11 @@ public class AbstractNodeWriter implements INodeWriter{
   }
 
   protected void writeNode(int offsetRow,int offsetCol,Marker marker,List<INode> l){
-    int size = l.size();
-    if(size<1){
+    if(null==marker){
       return;
     }
-    if(null==marker){
+    int size = l.size();
+    if(size<1){
       return;
     }
     if(marker instanceof RepeatedMarker){

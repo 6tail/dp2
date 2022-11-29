@@ -28,7 +28,7 @@ public class ParserTest {
      *
      * @see Types
      */
-    private static final String TYPE = Types.XLS;
+    private static final String TYPE = Types.XLSX;
 
     /**
      * 模板文件

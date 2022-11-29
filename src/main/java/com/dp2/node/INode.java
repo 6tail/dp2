@@ -36,4 +36,10 @@ public interface INode{
    * @return 节点类型
    */
   NodeType getType();
+
+  /**
+   * 获取高度
+   * @return 高度
+   */
+  Integer getHeight();
 }

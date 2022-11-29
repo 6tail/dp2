@@ -1,21 +1,19 @@
 package com.dp2.writer.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 import com.dp2.ParserFactory;
 import com.dp2.util.Types;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.dp2.node.INode;
 import com.dp2.util.IOUtil;
 import com.dp2.writer.AbstractWriter;
+
+import javax.imageio.ImageIO;
 
 /**
  * xlsx文件写入
@@ -57,6 +55,10 @@ public class XlsxWriter extends AbstractWriter{
     if(null==line){
       line = sheet.createRow(row);
     }
+    Integer height = node.getHeight();
+    if (null != height) {
+      line.setHeight((short)(height* 20));
+    }
     Cell cell = line.getCell(col);
     if(null==cell){
       cell = line.createCell(col);
@@ -68,6 +70,25 @@ public class XlsxWriter extends AbstractWriter{
           cell.setCellValue(Double.parseDouble(value));
         }catch(Exception e){
           cell.setCellValue(value);
+        }
+        break;
+      case local_image:
+        ByteArrayOutputStream out = null;
+        try {
+          out = new ByteArrayOutputStream();
+          ImageIO.write(ImageIO.read(new File(value)), "png", out);
+          byte[] data = out.toByteArray();
+          Drawing<?> drawingPatriarch = sheet.createDrawingPatriarch();
+          XSSFClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) col, row, (short) (col + 1), row + 1);
+          if (null != lightWorkbook) {
+            drawingPatriarch.createPicture(anchor, lightWorkbook.addPicture(data, XSSFWorkbook.PICTURE_TYPE_PNG));
+          }else if (null != workbook) {
+            drawingPatriarch.createPicture(anchor, workbook.addPicture(data, XSSFWorkbook.PICTURE_TYPE_PNG));
+          }
+        } catch (Exception e) {
+          cell.setCellValue(value);
+        } finally {
+          IOUtil.closeQuietly(out);
         }
         break;
       default:
