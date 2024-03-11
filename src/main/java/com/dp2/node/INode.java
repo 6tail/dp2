@@ -1,15 +1,15 @@
 package com.dp2.node;
 
-import java.util.List;
 import com.dp2.marker.Marker;
+
+import java.util.List;
 
 /**
  * 节点接口
  *
  * @author 6tail
- *
  */
-public interface INode{
+public interface INode {
   /**
    * 获取该节点对应的标记
    *
@@ -33,12 +33,14 @@ public interface INode{
 
   /**
    * 获取节点类型
+   *
    * @return 节点类型
    */
   NodeType getType();
 
   /**
    * 获取高度
+   *
    * @return 高度
    */
   Integer getHeight();

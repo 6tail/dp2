@@ -7,9 +7,8 @@ import java.util.List;
  * 读取接口
  *
  * @author 6tail
- *
  */
-public interface IReader{
+public interface IReader {
 
   /**
    * 是否支持

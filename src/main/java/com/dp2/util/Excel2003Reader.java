@@ -17,29 +17,37 @@ import java.util.concurrent.LinkedBlockingQueue;
  * .xls格式文件读取，解决读取大文件引起内存疯涨溢出的问题
  *
  * @author 6tail
- *
  */
-public class Excel2003Reader implements HSSFListener{
-  /** YM格式 */
-  private static final Set<String> YM_FORMATS = new HashSet<String>(){
+public class Excel2003Reader implements HSSFListener {
+  /**
+   * YM格式
+   */
+  private static final Set<String> YM_FORMATS = new HashSet<String>() {
     private static final long serialVersionUID = 1L;
+
     {
       add("mmmmm");
       add("mmm\\-yy");
       add("yyyy\"年\"m\"月\"");
     }
   };
-  /** hms格式 */
-  private static final Set<String> HMS_FORMATS = new HashSet<String>(){
+  /**
+   * hms格式
+   */
+  private static final Set<String> HMS_FORMATS = new HashSet<String>() {
     private static final long serialVersionUID = 1L;
+
     {
       add("h:mm");
       add("h\"时\"mm\"分\"");
     }
   };
-  /** YMD格式 */
-  private static final Set<String> YMD_FORMATS = new HashSet<String>(){
+  /**
+   * YMD格式
+   */
+  private static final Set<String> YMD_FORMATS = new HashSet<String>() {
     private static final long serialVersionUID = 1L;
+
     {
       add("m/d/yy");
       add("m/d");
@@ -57,20 +65,22 @@ public class Excel2003Reader implements HSSFListener{
   };
   private final HSSFDataFormatter formatter = new HSSFDataFormatter();
 
-  /** 每次读取的行数 */
+  /**
+   * 每次读取的行数
+   */
   public static int queueSize = 5000;
 
-  private File file;
+  private final File file;
   private boolean end;
   private boolean stop;
   private int sheetIndex = -1;
   private int eofCount = 0;
   private SSTRecord sstRecord;
   private FormatTrackingHSSFListener formatListener;
-  private List<String> rowData = new ArrayList<String>();
-  private Queue<List<String>> rowQueue = new LinkedBlockingQueue<List<String>>(queueSize);
+  private final List<String> rowData = new ArrayList<String>();
+  private final Queue<List<String>> rowQueue = new LinkedBlockingQueue<List<String>>(queueSize);
 
-  public Excel2003Reader(File file){
+  public Excel2003Reader(File file) {
     this.file = file;
   }
 
@@ -87,42 +97,43 @@ public class Excel2003Reader implements HSSFListener{
     factory.processWorkbookEvents(request, fs);
   }
 
-  public List<String> nextLine(){
-    if(stop){
+  public List<String> nextLine() {
+    if (stop) {
       return null;
     }
     List<String> row = rowQueue.poll();
-    while(null==row){
-      if(stop||end){
+    while (null == row) {
+      if (stop || end) {
         break;
       }
-      try{
+      try {
         Thread.sleep(2);
-      }catch(InterruptedException ignore){}
+      } catch (InterruptedException ignore) {
+      }
       row = rowQueue.poll();
     }
     return row;
   }
 
   public void processRecord(Record record) {
-    if(stop||end){
+    if (stop || end) {
       return;
     }
-    switch (record.getSid()){
+    switch (record.getSid()) {
       case BoundSheetRecord.sid:
         break;
       case BOFRecord.sid:
-        BOFRecord bof = (BOFRecord)record;
-        if(bof.getType() == BOFRecord.TYPE_WORKSHEET) {
+        BOFRecord bof = (BOFRecord) record;
+        if (bof.getType() == BOFRecord.TYPE_WORKSHEET) {
           sheetIndex++;
-          if(sheetIndex>0){
+          if (sheetIndex > 0) {
             end = true;
           }
         }
         break;
       case EOFRecord.sid:
         eofCount++;
-        if(eofCount>1) {
+        if (eofCount > 1) {
           end = true;
         }
         break;
@@ -139,12 +150,12 @@ public class Excel2003Reader implements HSSFListener{
         break;
       case FormulaRecord.sid:
         FormulaRecord formula = (FormulaRecord) record;
-        if(!Double.isNaN(formula.getValue())){
+        if (!Double.isNaN(formula.getValue())) {
           rowData.add(formatListener.formatNumberDateCell(formula));
         }
         break;
       case StringRecord.sid:
-        StringRecord string = (StringRecord)record;
+        StringRecord string = (StringRecord) record;
         rowData.add(string.getString());
         break;
       case LabelRecord.sid:
@@ -153,7 +164,7 @@ public class Excel2003Reader implements HSSFListener{
         break;
       case LabelSSTRecord.sid:
         LabelSSTRecord labelSST = (LabelSSTRecord) record;
-        rowData.add(null==sstRecord?"":sstRecord.getString(labelSST.getSSTIndex()).toString());
+        rowData.add(null == sstRecord ? "" : sstRecord.getString(labelSST.getSSTIndex()).toString());
         break;
       case NoteRecord.sid:
         //NoteRecord note = (NoteRecord) record;
@@ -162,9 +173,9 @@ public class Excel2003Reader implements HSSFListener{
       case NumberRecord.sid:
         NumberRecord number = (NumberRecord) record;
         String formatString = formatListener.getFormatString(number);
-        if(null==formatString){
+        if (null == formatString) {
           rowData.add(formatListener.formatNumberDateCell(number));
-        }else {
+        } else {
           String convertFormatString = null;
           for (String format : YMD_FORMATS) {
             if (formatString.contains(format)) {
@@ -172,7 +183,7 @@ public class Excel2003Reader implements HSSFListener{
               break;
             }
           }
-          if(null==convertFormatString){
+          if (null == convertFormatString) {
             for (String format : YM_FORMATS) {
               if (formatString.contains(format)) {
                 convertFormatString = "yyyy-MM";
@@ -180,7 +191,7 @@ public class Excel2003Reader implements HSSFListener{
               }
             }
           }
-          if(null==convertFormatString){
+          if (null == convertFormatString) {
             for (String format : HMS_FORMATS) {
               if (formatString.contains(format)) {
                 convertFormatString = "hh:mm:ss";
@@ -188,10 +199,10 @@ public class Excel2003Reader implements HSSFListener{
               }
             }
           }
-          if(null!=convertFormatString) {
+          if (null != convertFormatString) {
             int formatIndex = formatListener.getFormatIndex(number);
             rowData.add(formatter.formatRawCellContents(number.getValue(), formatIndex, convertFormatString));
-          }else{
+          } else {
             rowData.add(formatListener.formatNumberDateCell(number));
           }
         }
@@ -202,11 +213,11 @@ public class Excel2003Reader implements HSSFListener{
         break;
       default:
     }
-    if(record instanceof MissingCellDummyRecord) {
+    if (record instanceof MissingCellDummyRecord) {
       //MissingCellDummyRecord missingCellDummy = (MissingCellDummyRecord)record;
       rowData.add("");
     }
-    if(record instanceof LastCellOfRowDummyRecord) {
+    if (record instanceof LastCellOfRowDummyRecord) {
       List<String> row = new ArrayList<String>(rowData.size());
       row.addAll(rowData);
       rowQueue.offer(row);
@@ -214,7 +225,7 @@ public class Excel2003Reader implements HSSFListener{
     }
   }
 
-  public void stop(){
+  public void stop() {
     stop = true;
   }
 }

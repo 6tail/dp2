@@ -1,15 +1,32 @@
 package com.dp2.parser;
 
-import java.util.List;
 import com.dp2.marker.Marker;
+import com.dp2.reader.IReader;
+import com.dp2.writer.IWriter;
+
+import java.util.List;
 
 /**
  * 解析器接口
  *
  * @author 6tail
- *
  */
-public interface IParser{
+public interface IParser {
+
+  /**
+   * 获取读取接口
+   *
+   * @return 读取接口
+   */
+  IReader getReader();
+
+  /**
+   * 获取写入接口
+   *
+   * @return 写入接口
+   */
+  IWriter getWriter();
+
   /**
    * 获取节点读取器接口
    *

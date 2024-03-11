@@ -30,12 +30,14 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * .xlsx格式文件读取，解决poi读取大文件引起内存疯涨溢出的问题，并且速度比poi快
  *
  * @author 6tail
- *
  */
-public class Excel2007Reader extends DefaultHandler implements Runnable{
-  /** 日期格式 */
-  private static final Set<String> DATE_FORMATS = new HashSet<String>(){
+public class Excel2007Reader extends DefaultHandler implements Runnable {
+  /**
+   * 日期格式
+   */
+  private static final Set<String> DATE_FORMATS = new HashSet<String>() {
     private static final long serialVersionUID = 1L;
+
     {
       add("m/d/yy");
       add("m/d");
@@ -45,44 +47,60 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
       add("yyyy/mm/dd");
     }
   };
-  /** 内容类型：未设置 */
+  /**
+   * 内容类型：未设置
+   */
   private static final int CELL_TYPE_NONE = 0;
-  /** 内容类型：字符串(s) */
+  /**
+   * 内容类型：字符串(s)
+   */
   private static final int CELL_TYPE_STRING = 1;
-  /** 内容类型：其他未知类型 */
+  /**
+   * 内容类型：其他未知类型
+   */
   private static final int CELL_TYPE_UNKNOWN = -1;
   private static final String TAG_ROW = "row";
   private static final String TAG_VALUE = "v";
   private static final String TAG_CELL = "c";
   private static final String TAG_STRING = "s";
   private static final String TAG_T = "t";
-  /** 每次读取的行数 */
+  /**
+   * 每次读取的行数
+   */
   public static int queueSize = 5000;
   private boolean end;
   private boolean stop;
-  /** 待读取内容类型 */
+  /**
+   * 待读取内容类型
+   */
   private int nextCellType = CELL_TYPE_NONE;
   private boolean tElement;
-  /** 上一次的内容 */
+  /**
+   * 上一次的内容
+   */
   private String lastContents;
-  /** 日期格式 */
+  /**
+   * 日期格式
+   */
   private String dateFormat;
   private String prefPos = null;
   private String currentPos = null;
-  private File file;
+  private final File file;
   private StylesTable stylesTable;
-  /** 共享字符表 */
+  /**
+   * 共享字符表
+   */
   private SharedStringsTable sst;
-  private List<String> rowData = new ArrayList<String>();
-  private Queue<List<String>> rowQueue = new LinkedBlockingQueue<List<String>>(queueSize);
+  private final List<String> rowData = new ArrayList<String>();
+  private final Queue<List<String>> rowQueue = new LinkedBlockingQueue<List<String>>(queueSize);
 
-  public Excel2007Reader(File file){
+  public Excel2007Reader(File file) {
     this.file = file;
   }
 
-  public void run(){
+  public void run() {
     InputStream sheet = null;
-    try{
+    try {
       OPCPackage pkg = OPCPackage.open(file);
       XSSFReader r = new XSSFReader(pkg);
       stylesTable = r.getStylesTable();
@@ -91,8 +109,8 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
       XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
       parser.setContentHandler(this);
       parser.parse(new InputSource(sheet));
-    }catch(Exception ignore){
-    }finally{
+    } catch (Exception ignore) {
+    } finally {
       IOUtil.closeQuietly(sheet);
       end = true;
     }
@@ -104,55 +122,56 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
    * @param label 列标，A、B、C、AB之类的
    * @return 横坐标
    */
-  private int getPos(String label){
+  private int getPos(String label) {
     char[] letters = label.toUpperCase().toCharArray();
     int n = 0;
     int size = letters.length;
-    for(int i = 0;i<size;i++){
-      int p = letters[size-i-1];
+    for (int i = 0; i < size; i++) {
+      int p = letters[size - i - 1];
       p -= 64;
-      if(0==i){
+      if (0 == i) {
         p -= 1;
       }
-      n += p*Math.pow(26,i);
+      n += (int) (p * Math.pow(26, i));
     }
     return n;
   }
 
-  private int diffPos(){
-    return getPos(currentPos.toUpperCase())-getPos(prefPos.toUpperCase())-1;
+  private int diffPos() {
+    return getPos(currentPos.toUpperCase()) - getPos(prefPos.toUpperCase()) - 1;
   }
 
   @Override
-  public void startElement(String uri, String localName, String name, Attributes attributes){
-    while(rowQueue.size()>=queueSize){
-      try{
+  public void startElement(String uri, String localName, String name, Attributes attributes) {
+    while (rowQueue.size() >= queueSize) {
+      try {
         Thread.sleep(2);
-      }catch(InterruptedException ignore){}
-      if(stop){
+      } catch (InterruptedException ignore) {
+      }
+      if (stop) {
         throw new RuntimeException("中止读取");
       }
     }
-    if(TAG_ROW.equals(name)){
+    if (TAG_ROW.equals(name)) {
       prefPos = "@";
-    }else if(TAG_CELL.equals(name)){
+    } else if (TAG_CELL.equals(name)) {
       dateFormat = null;
       String cellType = attributes.getValue("t");
       String cellStyle = attributes.getValue("s");
       String pos = attributes.getValue("r");
-      currentPos = pos.replaceAll("\\d+","");
-      if(null==cellType) {
+      currentPos = pos.replaceAll("\\d+", "");
+      if (null == cellType) {
         nextCellType = CELL_TYPE_NONE;
-      }else if(TAG_STRING.equals(cellType)) {
+      } else if (TAG_STRING.equals(cellType)) {
         nextCellType = CELL_TYPE_STRING;
-      }else {
+      } else {
         nextCellType = CELL_TYPE_UNKNOWN;
       }
-      if(null!=cellStyle){
+      if (null != cellStyle) {
         int cs = Integer.parseInt(cellStyle);
         XSSFCellStyle style = stylesTable.getStyleAt(cs);
         String format = style.getDataFormatString();
-        if(DATE_FORMATS.contains(format)){
+        if (DATE_FORMATS.contains(format)) {
           dateFormat = "yyyy-MM-dd";
         }
       }
@@ -164,57 +183,60 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
   }
 
   @Override
-  public void endElement(String uri, String localName, String name){
-    if(stop){
+  public void endElement(String uri, String localName, String name) {
+    if (stop) {
       throw new RuntimeException("中止读取");
     }
-    if(CELL_TYPE_STRING==nextCellType){
-      try{
+    if (CELL_TYPE_STRING == nextCellType) {
+      try {
         int idx = Integer.parseInt(lastContents);
         lastContents = new XSSFRichTextString(sst.getEntryAt(idx)).toString();
-      }catch(Exception ignore){}
+      } catch (Exception ignore) {
+      }
     }
-    if(tElement){
-      for(int i = 0,j = diffPos();i<j;i++){
+    if (tElement) {
+      for (int i = 0, j = diffPos(); i < j; i++) {
         rowData.add("");
       }
       prefPos = currentPos;
       String value = lastContents.trim();
       rowData.add(value);
       tElement = false;
-    }else if(TAG_VALUE.equals(name)){
+    } else if (TAG_VALUE.equals(name)) {
       //值
-      for(int i = 0,j = diffPos();i<j;i++){
+      for (int i = 0, j = diffPos(); i < j; i++) {
         rowData.add("");
       }
       prefPos = currentPos;
       String value = lastContents.trim();
       int length = value.length();
-      if(length>0){
+      if (length > 0) {
         //日期格式处理
-        if(null!=dateFormat){
-            Date date = null;
-            try {
-              date = HSSFDateUtil.getJavaDate(Double.valueOf(value));
-            } catch (Exception e) {
-              if(length==10) {
-                try {
-                  date = HSSFDateUtil.parseYYYYMMDDDate(value);
-                }catch (Exception ignore) {}
+        if (null != dateFormat) {
+          Date date = null;
+          try {
+            date = HSSFDateUtil.getJavaDate(Double.parseDouble(value));
+          } catch (Exception e) {
+            if (length == 10) {
+              try {
+                date = HSSFDateUtil.parseYYYYMMDDDate(value);
+              } catch (Exception ignore) {
               }
             }
-            if(null!=date) {
-              value = new SimpleDateFormat(dateFormat).format(date);
-            }
-        }else if(CELL_TYPE_NONE==nextCellType) {
+          }
+          if (null != date) {
+            value = new SimpleDateFormat(dateFormat).format(date);
+          }
+        } else if (CELL_TYPE_NONE == nextCellType) {
           //尝试按数字处理
           try {
             value = DoubleFixUtil.fix(Double.parseDouble(value));
-          }catch(Exception ignore) {}
+          } catch (Exception ignore) {
+          }
         }
       }
       rowData.add(value);
-    }else if(TAG_ROW.equals(name)){
+    } else if (TAG_ROW.equals(name)) {
       List<String> row = new ArrayList<String>(rowData.size());
       row.addAll(rowData);
       rowQueue.offer(row);
@@ -223,11 +245,11 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
   }
 
   @Override
-  public void characters(char[] ch, int start, int length){
-    lastContents += new String(ch,start,length);
+  public void characters(char[] ch, int start, int length) {
+    lastContents += new String(ch, start, length);
   }
 
-  public void load(){
+  public void load() {
     end = false;
     stop = false;
     nextCellType = CELL_TYPE_NONE;
@@ -238,27 +260,28 @@ public class Excel2007Reader extends DefaultHandler implements Runnable{
     currentPos = null;
     rowData.clear();
     rowQueue.clear();
-    new ThreadPoolExecutor(1,1,0L,TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>(),new ThreadPoolExecutor.AbortPolicy()).execute(this);
+    new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.AbortPolicy()).execute(this);
   }
 
-  public List<String> nextLine(){
-    if(stop){
+  public List<String> nextLine() {
+    if (stop) {
       return null;
     }
     List<String> row = rowQueue.poll();
-    while(null==row){
-      if(stop||end){
+    while (null == row) {
+      if (stop || end) {
         break;
       }
-      try{
+      try {
         Thread.sleep(2);
-      }catch(InterruptedException ignore){}
+      } catch (InterruptedException ignore) {
+      }
       row = rowQueue.poll();
     }
     return row;
   }
 
-  public void stop(){
+  public void stop() {
     stop = true;
   }
 }

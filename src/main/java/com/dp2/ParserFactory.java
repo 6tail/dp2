@@ -1,8 +1,5 @@
 package com.dp2;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import com.dp2.exception.ParserNotSupportException;
 import com.dp2.parser.AbstractParser;
 import com.dp2.parser.IParser;
@@ -13,26 +10,31 @@ import com.dp2.util.Types;
 import com.dp2.writer.IWriter;
 import com.dp2.writer.WriterFactory;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 解析工厂
  *
  * @author 6tail
- *
  */
-public class ParserFactory{
-  /** 空白的模板文件映射 */
-  public static final Map<String,File> EMPTY_TEMPLATE_FILES = new HashMap<String,File>();
+public class ParserFactory {
+  /**
+   * 空白的模板文件映射
+   */
+  public static final Map<String, File> EMPTY_TEMPLATE_FILES = new HashMap<String, File>(3);
 
   /**
    * 初始化
    */
-  protected static void init(){
+  protected static void init() {
     EMPTY_TEMPLATE_FILES.put(Types.XLS, TemplateUtil.initXls());
     EMPTY_TEMPLATE_FILES.put(Types.XLSX, TemplateUtil.initXlsx());
     EMPTY_TEMPLATE_FILES.put(Types.CSV, TemplateUtil.initTxt());
   }
 
-  static{
+  static {
     init();
   }
 
@@ -43,9 +45,9 @@ public class ParserFactory{
    * @return 解析器接口
    * @throws ParserNotSupportException ParserNotSupportException
    */
-  public static IParser getParser(String type) throws ParserNotSupportException{
+  public static IParser getParser(String type) throws ParserNotSupportException {
     File file = EMPTY_TEMPLATE_FILES.get(type.toLowerCase());
-    if(null==file){
+    if (null == file) {
       throw new ParserNotSupportException();
     }
     return getParser(file);
@@ -58,9 +60,10 @@ public class ParserFactory{
    * @return 解析器接口
    * @throws ParserNotSupportException ParserNotSupportException
    */
-  public static IParser getParser(File file) throws ParserNotSupportException{
+  public static IParser getParser(File file) throws ParserNotSupportException {
     IReader reader = ReaderFactory.getReader(file);
-    IWriter writer = WriterFactory.getWriter(reader.type(),file);
-    return new AbstractParser(reader,writer){};
+    IWriter writer = WriterFactory.getWriter(reader.type(), file);
+    return new AbstractParser(reader, writer) {
+    };
   }
 }

@@ -10,24 +10,23 @@ import java.util.Arrays;
  * OFFICE97-2003抽象读取
  *
  * @author 6tail
- *
  */
-public abstract class AbstractOfficeReader extends AbstractReader{
+public abstract class AbstractOfficeReader extends AbstractReader {
 
-  protected AbstractOfficeReader(File file){
+  protected AbstractOfficeReader(File file) {
     super(file);
   }
 
   @Override
-  public boolean support(){
+  public boolean support() {
     int magicLength = Magics.OFFICE_97_2003.length;
-    byte[] magic = ReaderUtil.getMagic(file,magicLength);
-    if(!Arrays.equals(Magics.OFFICE_97_2003,magic)){
+    byte[] magic = ReaderUtil.getMagic(file, magicLength);
+    if (!Arrays.equals(Magics.OFFICE_97_2003, magic)) {
       return false;
     }
-    try{
+    try {
       load();
-    }catch(Exception e){
+    } catch (Exception e) {
       return false;
     }
     return true;

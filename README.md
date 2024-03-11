@@ -14,25 +14,14 @@
 
 ## 使用
 
-目前尚未发布稳定版本，请通过maven引入SNAPSHOT版本使用或者[点此下载](https://github.com/6tail/dp2/releases)相应的jar。
+通过maven引入或者[点此下载](https://github.com/6tail/dp2/releases)相应的jar。
 
-```xml
-<repository>
-  <id>sonatype</id>
-  <url>https://oss.sonatype.org/content/groups/public/</url>
-  <snapshots>
-    <enabled>true</enabled>
-    <updatePolicy>daily</updatePolicy>
-    <checksumPolicy>warn</checksumPolicy>
-  </snapshots>
-</repository>
-```
 
 ```xml
 <dependency>
   <groupId>cn.6tail</groupId>
   <artifactId>dp2</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 

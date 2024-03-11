@@ -4,13 +4,18 @@ package com.dp2.node;
  * 节点类型
  *
  * @author 6tail
- *
  */
-public enum NodeType{
-  /** 文本 */
+public enum NodeType {
+  /**
+   * 文本
+   */
   text,
-  /** 数字 */
+  /**
+   * 数字
+   */
   number,
-  /** 本地图片 */
+  /**
+   * 本地图片
+   */
   local_image
 }

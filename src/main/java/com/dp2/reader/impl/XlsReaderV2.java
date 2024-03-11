@@ -12,34 +12,33 @@ import java.util.List;
  * xls文件读取
  *
  * @author 6tail
- *
  */
 public class XlsReaderV2 extends AbstractOfficeReader {
   private Excel2003Reader realReader;
 
-  public XlsReaderV2(File file){
+  public XlsReaderV2(File file) {
     super(file);
   }
 
-  public void load() throws IOException{
+  public void load() throws IOException {
     realReader = new Excel2003Reader(file);
     realReader.load();
     stop = false;
   }
 
-  public List<String> nextLine(){
-    if(stop){
+  public List<String> nextLine() {
+    if (stop) {
       return null;
     }
     return realReader.nextLine();
   }
 
-  public String type(){
+  public String type() {
     return Types.XLS;
   }
 
   @Override
-  public void stop(){
+  public void stop() {
     super.stop();
     realReader.stop();
   }

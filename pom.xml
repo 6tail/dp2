@@ -7,7 +7,7 @@
     <groupId>cn.6tail</groupId>
     <artifactId>dp2</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.3</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://github.com/6tail/dp2</url>
     <description>a common data parser tool, support reading and writing xls, xlsx, doc, docx, csv.</description>
@@ -24,12 +24,13 @@
         <maven-source-plugin-version>2.4</maven-source-plugin-version>
         <maven-release-plugin-version>2.2.2</maven-release-plugin-version>
         <maven-gpg-plugin-version>1.6</maven-gpg-plugin-version>
+        <maven-assembly-plugin-version>2.2-beta-5</maven-assembly-plugin-version>
     </properties>
 
     <licenses>
         <license>
             <name>The MIT License</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
     <developers>
@@ -87,7 +88,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.14.2</version>
+            <version>1.17.2</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -171,7 +172,9 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin-version}</version>
                 <configuration>
                     <appendAssemblyId>false</appendAssemblyId>
                     <finalName>${project.artifactId}-${project.version}</finalName>

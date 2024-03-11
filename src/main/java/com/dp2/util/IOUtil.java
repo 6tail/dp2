@@ -7,15 +7,15 @@ import java.io.IOException;
  * IO处理工具
  *
  * @author 6tail
- *
  */
 public class IOUtil {
-  public static void closeQuietly(Closeable closeable){
-    if(null==closeable){
+  public static void closeQuietly(Closeable closeable) {
+    if (null == closeable) {
       return;
     }
-    try{
+    try {
       closeable.close();
-    }catch(IOException ignore){}
+    } catch (IOException ignore) {
+    }
   }
 }
